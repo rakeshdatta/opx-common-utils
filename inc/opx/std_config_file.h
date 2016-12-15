@@ -67,7 +67,7 @@ Booleans=true;false;true;true
 /**
  * This is the location of the standard NGOS configuration files
  */
-#define STD_CFG_FILE_LOCATION "/etc/opt/dell/os10"
+#define STD_CFG_FILE_LOCATION "/etc/opx"
 
 /*
  * @brief the config file handle
@@ -137,7 +137,7 @@ t_std_error std_config_file_get_keys(std_cfg_file_handle_t handle,
 /**
  * @brief write the config to a new file
  * @param handle to the config file
- * @param name of the file to write /etc/opt/dell/os10/xxx
+ * @param name of the file to write /etc/opx/xxx
  * @return standard error code
  */
 t_std_error std_config_file_write(std_cfg_file_handle_t handle,
