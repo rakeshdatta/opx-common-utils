@@ -7,4 +7,5 @@ libopx-common1\_*version*\_*arch*.deb      - Utility libraries
 libopx-common-dev\_*version*\_*arch*.deb   - Exported header files
 
 See https://github.com/open-switch/opx-docs/wiki/Architecture for information on the common utilities module.
+
 (c) 2017 Dell
