@@ -14,18 +14,7 @@
  * permissions and limitations under the License.
  */
 
-/************************************************************************
- * LEGALESE:   Copyright (c) 1999-2014, Dell Inc
- *
- * This source code is confidential, proprietary, and contains trade
- * secrets that are the sole property of Dell Inc.
- * Copy and/or distribution of this source code or disassembly or reverse
- * engineering of the resultant object code are strictly forbidden without
- * the written consent of Dell Inc.
- *
- ************************************************************************
- *
- *!
+/*!
  * \file   std_type_defs.h
  * \brief  common definitions
  * \date   04-2014
