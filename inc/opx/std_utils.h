@@ -238,6 +238,20 @@ char * std_remove_leading_whitespace(char * str, char *ws_delim);
 char * std_remove_comment_and_trailing_whitespace(char *str);
 
 /**
+* @brief Parse a standard string and return a handle to keep track of the data.
+*        The function accepts escape sequences to escape delimiter string
+*        if needed
+*
+*
+* @param handle [out] the handle that will be used to iterate over the contents of the string
+* @param string string to parse (break into tokens)
+* @param delim  The delimiter used to break the string into pieces
+* @param esc    The escape sequence to escape the delimiter
+*
+* @return       true if possible otherwise false
+*/
+bool std_parse_string_with_esc(std_parsed_string_t * handle,const char * string, const char *delim, const char *esc);
+/**
  *  \}
  */
 #ifdef __cplusplus

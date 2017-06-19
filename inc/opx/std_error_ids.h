@@ -92,7 +92,8 @@ enum e_std_error_subsystems {
     e_std_err_DCBX=54,
     e_std_err_UDF=55,
     e_std_err_DNV_ONBOARDING=56,
-    e_std_err_DNV_NETWORK=57    
+    e_std_err_DNV_NETWORK=57,    
+    e_std_err_APP_FC=58
 };
 
 enum e_std_error_codes {

@@ -38,6 +38,9 @@
 #include "std_error_codes.h"
 #include "std_type_defs.h"
 
+#include <stddef.h>
+#include <stdio.h>
+
 /** \defgroup SocketsAndFilesCommon Socket and File utilities
 *
 * \{
@@ -110,6 +113,36 @@ t_std_error std_redir_stdoutin(int fd);
  * @return  std error code
  */
 t_std_error std_close (int fd);
+
+/**
+ * @brief   write a set of buffers and give options to continue to write
+ *          or finish after the first error that can be ignored..  ignores eintr
+ * @param   fd[in] the file descriptor to use
+ * @param   data[in] the buffers to write
+ * @param   data_lens[in] the length of data
+ * @param     set_len the length of the data/data_lens arrays
+ * @param   require_all[in] true if should send all data otherwise false
+ * @param   err the error code if provided
+ * @return  length written.  On error returns -1 and can check the return code for the error reason
+ */
+
+ssize_t std_write_set(int fd, void**data, size_t *data_lens,  size_t set_len, bool require_all,
+        t_std_error *err);
+
+
+/**
+ * @brief   read into a set of buffers and give options to continue to read
+ *          or finish after the first error that can be ignored..  ignores eintr
+ * @param   fd[in] the file descriptor to use
+ * @param   data[in] the buffer to read into
+ * @param   data_lens[in] the lengths of the corresponding data buffer
+ * @param     set_len[in] the sizes of the list of data/data_lens
+ * @param   require_all[in] true if should send all data otherwise false
+ * @param   err the error code if provided
+ * @return  length written.  On error returns -1 and can check the return code for the error reason
+ */
+ssize_t std_read_set(int fd, void**data, size_t *data_lens,  size_t set_len, bool require_all,
+        t_std_error *err);
 
 #ifdef __cplusplus
 }

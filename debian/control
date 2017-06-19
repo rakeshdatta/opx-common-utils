@@ -3,7 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Dell EMC <ops-dev@lists.openswitch.net>
 Build-Depends:
- debhelper (>= 9), dh-autoreconf, libopx-logging-dev, libxml2-dev
+ debhelper (>= 9), dh-autoreconf, libopx-logging-dev  (>= 2.0.0), libxml2-dev
 Standards-Version: 3.9.3
 Vcs-Browser: https://github.com/open-switch/opx-common-utils
 Vcs-Git: https://github.com/open-switch/opx-common-utils.git
@@ -16,6 +16,6 @@ Description: This package contains general utilities for the Openswitch project.
 Package: libopx-common-dev
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
- libopx-common1 (= ${binary:Version}), libopx-logging-dev
+ libopx-common1 (= ${binary:Version}), libopx-logging-dev (>= 2.0.0)
 Description: This package contains general utilities for the Openswitch project.
 

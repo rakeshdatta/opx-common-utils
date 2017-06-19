@@ -130,6 +130,72 @@ bool std_parse_string(std_parsed_string_t * handle,const char * string, const ch
     return true;
 }
 
+static size_t std_find_string_with_esc(std::string& str,  std::string::size_type ix, const char *delim, std::string& esc) {
+
+    std::string::size_type len = str.size();
+    if(ix >= len)
+         return std::string::npos;
+    try {
+        size_t e = str.find(delim,ix);
+        while(e != std::string::npos) {
+            size_t esc_pos = str.find(esc, ix);
+            if((esc_pos !=std::string::npos) && (esc_pos + esc.size() == e)) {
+                ix = e+1;
+                e = str.find(delim, ix);
+            } else {
+                return e;
+            }
+        }
+     } catch (...) {
+        return std::string::npos;
+    }
+    return std::string::npos;
+}
+
+static bool std_string_replace(std::string& str, const std::string& from, const std::string& to) {
+    size_t start_pos = 0;
+    try {
+        while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+            str.replace(start_pos, from.length(), to);
+            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+        }
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
+
+bool std_parse_string_with_esc(std_parsed_string_t * handle,const char * string, const char *delim, const char *esc) {
+
+    std::unique_ptr<std::vector<std::string> > vect(new std::vector<std::string>);
+    if (vect.get()==NULL) return false;
+    try {
+        std::string data(string);
+        std::string esc_string(esc);
+        std::string empty_string("");
+
+        std::string::size_type delim_len = strlen(delim);
+        std::string::size_type len = data.size();
+        std::string::size_type ix = 0;
+        std::string::size_type esc_len = strlen(esc);
+        for ( ; ix < len ; ) {
+            size_t e = std_find_string_with_esc(data, ix, delim, esc_string);
+            if (e==std::string::npos) {
+                e = data.size();
+            }
+            std::string found = data.substr(ix,e-ix);
+            std_string_replace(found, esc_string, empty_string);
+            const char * ptr = found.c_str();
+            vect.get()->push_back(ptr);
+            ix = e + delim_len;
+        }
+    } catch (...) {
+        return false;
+    }
+    *handle = vect.release();
+    return true;
+}
+
 std::vector<std::string> * TOV(std_parsed_string_t p) {
     return static_cast<std::vector<std::string> *>(p);
 }

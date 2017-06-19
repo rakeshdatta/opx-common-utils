@@ -207,7 +207,7 @@ static inline void * std_tlv_add_u64(void *data, size_t *data_len, std_tlv_tag_t
  * @return true if the TLV is valid otherwise false
  */
 static inline bool std_tlv_valid(register void *data, register  size_t len) {
-    if (data == NULL) return false;
+    if ((data == NULL) || (len == 0)) return false;
     return (len >= (size_t)std_tlv_total_len(data));
 }
 

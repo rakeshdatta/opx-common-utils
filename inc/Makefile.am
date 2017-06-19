@@ -12,6 +12,5 @@ opx/std_directory.h           opx/std_radix.h              opx/std_tlv_internal.
 opx/std_envvar.h              opx/std_rbtree.h             opx/std_type_defs.h  \
 opx/std_error_codes.h         opx/std_rw_lock.h            opx/std_user_perm.h \
 opx/std_error_ids.h           opx/std_select_tools.h       opx/std_utils.h \
-opx/std_event_service.h       opx/std_shlib.h              opx/std_xml_parser.h \
-opx/std_crc32.h
+opx/std_event_service.h       opx/std_shlib.h              opx/std_xml_parser.h
 

@@ -19,7 +19,9 @@
  */
 
 #include "std_file_utils.h"
+
 #include <unistd.h>
+#include <sys/uio.h>
 
 #define STD_MAX_EINTR (10)
 
@@ -130,4 +132,90 @@ t_std_error std_redir_stdoutin(int fd) {
 
 t_std_error std_close (int fd) {
     return (close (fd) < 0) ? (STD_ERRNO): STD_ERR_OK;
+}
+
+typedef ssize_t (*op_on_set)(int, const struct iovec *, int);
+
+static ssize_t _std_op_set(int fd, void**data, size_t *data_lens,  size_t set_len, bool require_all, t_std_error *err,
+        op_on_set op) {
+    struct iovec *_piov, _iovs[set_len];
+    _piov = _iovs;
+
+    size_t _iovs_len = 0;
+
+    size_t _total_len = 0;
+
+    size_t _ix = 0;
+    for (; _ix < set_len ; ++_ix ) {
+        if (data_lens[_ix]==0) continue;
+
+        _iovs[_iovs_len].iov_base = data[_ix];
+        _iovs[_iovs_len].iov_len = data_lens[_ix];
+
+        ++_iovs_len;
+        _total_len += data_lens[_ix];
+    }
+    set_len = _iovs_len;
+
+
+    int total = 0;
+    int fail_retry = 10;
+
+    while (set_len>0) {
+        ssize_t rc = op(fd,_piov,set_len);
+        if (rc==-1 && errno==EINTR) {
+            --fail_retry;
+            if (fail_retry < 0) {
+                if (err!=NULL) *err = STD_ERR(COM,FAIL,errno);
+                return rc;
+            }
+            continue;
+        }
+
+        if (rc==-1) {
+            if (err!=NULL) *err = STD_ERR(COM,FAIL,errno);;
+            return rc;
+        }
+        if (rc==0) return total;
+
+        total+=rc;
+
+        if (_total_len==(size_t)total) break;
+
+        while (rc>0) {
+            if ((ssize_t)_piov[0].iov_len < rc ) {
+                rc -= _piov[0].iov_len;
+                ++_piov;
+                --set_len;
+            } else {
+                _piov[0].iov_base= ((char*)_piov[0].iov_base) + rc;
+                _piov[0].iov_len-=rc;
+                rc = 0;
+            }
+        }
+
+        if (!require_all) break;
+        fail_retry = 10;
+    }
+
+    if (err!=NULL) *err = STD_ERR_OK;
+    return total;
+}
+
+/**
+ * @brief   write a set of buffers and give options to continue to write
+ *          or finish after the first error that can be ignored..  ignores eintr
+ * @param   fd[in] the file descriptor to use
+ * @param   data[in] the buffer to write
+ * @param   len[in] the length of data
+ * @param   require_all[in] true if should send all data otherwise false
+ * @param   err the error code if provided
+ * @return  length written.  On error returns -1 and can check the return code for the error reason
+ */
+ssize_t std_write_set(int fd, void**data, size_t *data_lens,  size_t set_len, bool require_all, t_std_error *err) {
+    return _std_op_set(fd,data,data_lens,set_len,require_all,err,writev);
+}
+
+ssize_t std_read_set(int fd, void**data, size_t *data_lens,  size_t set_len, bool require_all, t_std_error *err) {
+    return _std_op_set(fd,data,data_lens,set_len,require_all,err,readv);
 }
