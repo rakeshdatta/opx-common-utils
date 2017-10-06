@@ -100,12 +100,12 @@ static int lowest_bit[] = {
     5,1,2,1,3,1,2,1,4,1,2,1,3,1,2,1,            //f0
 };
 
-inline unsigned int std_find_last_bit8(register unsigned int byte, register unsigned int from) {
+static inline unsigned int std_find_last_bit8(register unsigned int byte, register unsigned int from) {
     register unsigned int mask = ((unsigned int )(~0)) >> from;
     return highest_bit[byte&mask];
 }
 
-inline unsigned int std_find_first_bit8(register unsigned int byte, register unsigned int from) {
+static inline unsigned int std_find_first_bit8(register unsigned int byte, register unsigned int from) {
     register unsigned int mask = ((unsigned int )(~0)) << from;
     return lowest_bit[byte&mask];
 }

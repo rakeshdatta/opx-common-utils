@@ -90,6 +90,8 @@ typedef int hal_ifindex_t;
 //Changing it to uint16_t to match with sai_vlan_id_t which is uint16_t
 typedef uint16_t hal_vlan_id_t;
 
+// Type to refer VxLAN Identifier
+typedef uint32_t vxlan_id_t;
 /**
  * HAL VRF ID type
  */

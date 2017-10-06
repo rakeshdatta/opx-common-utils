@@ -177,7 +177,6 @@ bool std_parse_string_with_esc(std_parsed_string_t * handle,const char * string,
         std::string::size_type delim_len = strlen(delim);
         std::string::size_type len = data.size();
         std::string::size_type ix = 0;
-        std::string::size_type esc_len = strlen(esc);
         for ( ; ix < len ; ) {
             size_t e = std_find_string_with_esc(data, ix, delim, esc_string);
             if (e==std::string::npos) {

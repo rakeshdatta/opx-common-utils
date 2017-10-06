@@ -506,7 +506,7 @@ struct event_msg_buff_t {
 
 std_event_msg_buff_t std_client_allocate_msg_buff(unsigned int buffer_space, bool limit_max) {
     event_msg_buff_t *p = new event_msg_buff_t;
-    if (p==NULL) return false;
+    if (p==NULL) return NULL;
 
     try {
         p->buff.resize(buffer_space);
