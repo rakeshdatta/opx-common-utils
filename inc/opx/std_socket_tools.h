@@ -52,7 +52,10 @@
  */
 typedef enum  {
     e_std_sock_UNIX,  //!< Unix Domain socket
-    e_std_sock_INET4, //!< Internet domain IPv4 Socket
+    e_std_sock_INET4, //!< Internet domain IPv4 socket
+    e_std_sock_INET6, //!< Internet domain IPv6 socket
+    e_std_sock_PACKET, //!< Low level packet socket
+    e_std_sock_NETLINK, //!< Netlink socket
 }e_std_socket_domain_t ;
 
 /* This type is deprecated - use the socket domain type instead */
@@ -220,17 +223,47 @@ t_std_error std_sock_addr_from_ip_str (e_std_socket_domain_t domain,
  * @param[out] fd - socket descriptor returned
  * @return  STD_ERR_OK if successful or error
  * @verbatim
- * for eg: to create a IPv4 UDP socket and bind it to 127.0.0.1 port 20000
- *   std_socket_address_t bind;
- *   t_std_error rc = std_sock_addr_from_ip_str (e_std_sock_INET4, "127.0.0.1", 20000,
- *                                               &bind);
- *   int fd;
- *   rc = std_socket_create (e_std_sock_INET4, e_std_sock_type_DGRAM, 0, &bind, &fd);
+    // to create a IPv4 UDP socket and bind it to 127.0.0.1 port 20000
+    std_socket_address_t bind;
+    t_std_error rc = std_sock_addr_from_ip_str (e_std_sock_INET4, "127.0.0.1", 20000,
+                                                &bind);
+    int fd;
+    rc = std_socket_create (e_std_sock_INET4, e_std_sock_type_DGRAM, 0, &bind, &fd);
+ * @endverbatim
  */
 t_std_error std_socket_create (e_std_socket_domain_t std_domain,
                                e_std_sock_type_t std_type,
                                int protocol,
                                const std_socket_address_t* bind,
+                               int* fd);
+
+  /**
+ * @brief  Create socket endpoint, in a specific network namespace. Optionally bind to address
+ * Use std_close to close the socket
+ * @param[in]  domain - socket domain
+ * @param[in]  type   - socket type - connected stream, connectionless datagram
+ * @param[in]  protocol - depends on the socket domain
+ *                      - for INET domain this would be the IP protocol
+ *                        and is valid only if the socket type is
+ *                        not STREAM or DGRAM. See 'man socket'
+ * @param[in]  bind   - if not NULL then bind new socket to specified address
+ * @param[in]  net_namespace   - network namespace (do NOT specify /var/run/netns in the name)
+ * @param[out] fd - socket descriptor returned
+ * @return  STD_ERR_OK if successful or error
+ * @verbatim
+   // to create a IPv4 UDP socket and bind it to 127.0.0.1 port 20000 in the namespace 'OS10NET'
+    std_socket_address_t bind;
+    t_std_error rc = std_sock_addr_from_ip_str (e_std_sock_INET4, "127.0.0.1", 20000,
+                                                &bind);
+    int fd;
+    rc = std_netns_socket_create (e_std_sock_INET4, e_std_sock_type_DGRAM, 0, &bind, "OS10NET", &fd);
+ * @endverbatim
+ */
+t_std_error std_netns_socket_create (e_std_socket_domain_t std_domain,
+                               e_std_sock_type_t std_type,
+                               int protocol,
+                               const std_socket_address_t* bind,
+                               const char *net_namespace,
                                int* fd);
 
 /**

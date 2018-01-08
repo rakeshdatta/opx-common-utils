@@ -152,7 +152,7 @@ struct  std_socket_event_server_t {
 
 
 bool std_node_t::create_node(uint32_t node) {
-    std::auto_ptr<std_node_t> n (new std_node_t);
+    std::unique_ptr<std_node_t> n (new std_node_t);
     try {
         m_nodes[node] = n.get();
         n.release();

@@ -105,7 +105,7 @@ const char* std_code_to_text(
 
 bool std_parse_string(std_parsed_string_t * handle,const char * string, const char *delim) {
 
-    std::auto_ptr<std::vector<std::string> > vect(new std::vector<std::string>);
+    std::unique_ptr<std::vector<std::string> > vect(new std::vector<std::string>);
     if (vect.get()==NULL) return false;
     try {
         std::string data(string);

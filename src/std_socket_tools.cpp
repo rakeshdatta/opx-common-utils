@@ -22,14 +22,20 @@
 #include "std_socket_tools.h"
 #include "event_log.h"
 #include "std_select_tools.h"
+#include "std_system.h"
 
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
-#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <type_traits>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <sched.h>
+#include <fcntl.h>
+
 
 #define GENERIC_FAIL STD_ERR_MK(e_std_err_COM,e_std_err_code_PARAM,0)
 #define RET_ERRNO STD_ERR_FROM_ERRNO(e_std_err_COM,e_std_err_code_PARAM)
@@ -72,7 +78,7 @@ static void create_s_sock_addr(const std_socket_address_t *in_saddr,
         case e_std_sock_UNIX:  return _fill_unix_addr (in_saddr, out_saddr, len);
         case e_std_sock_INET4: return _fill_inet4_addr (in_saddr, out_saddr, len);
         default:
-            EV_LOG_ERR(ev_log_t_COM, 0,0, "Unsupported socket domain %d",
+            EV_LOGGING(COM, ERR, "SOCKET-CREATE", "Unsupported socket domain %d",
                        in_saddr->type);
             break;
     }
@@ -105,7 +111,7 @@ extern "C" t_std_error std_server_socket_create(std_server_socket_desc_t *desc) 
     }
     rc = listen(s,desc->listeners);
     if (rc!=0) {
-        EV_LOG_ERR(ev_log_t_NPU,0,0,
+        EV_LOGGING(NPU,ERR,"SOCKET-LISTEN",
             "failed to set listen #%u on socket %d ignored",
             desc->listeners,s);
     }
@@ -206,9 +212,12 @@ extern "C" t_std_error std_sock_create_pair(e_std_socket_domain_t domain, bool s
 static int _sock_domain_map (e_std_socket_domain_t std_domain) {
     switch (std_domain) {
         case e_std_sock_INET4:  return AF_INET;
+        case e_std_sock_INET6:  return AF_INET6;
+        case e_std_sock_PACKET: return AF_PACKET;
+        case e_std_sock_NETLINK:return AF_NETLINK;
         case e_std_sock_UNIX:   return AF_UNIX;
         default:
-            EV_LOG_ERR(ev_log_t_COM, 0,0, "Unknown socket domain %d", std_domain);
+            EV_LOGGING(COM, ERR, "SOCKET-DOMAIN-MAP", "Unknown socket domain %d", std_domain);
             return -1;
     }
 }
@@ -217,8 +226,9 @@ static int _sock_type_map (e_std_sock_type_t std_type) {
     switch (std_type) {
         case e_std_sock_type_STREAM: return SOCK_STREAM;
         case e_std_sock_type_DGRAM:  return SOCK_DGRAM;
+        case e_std_sock_type_RAW:    return SOCK_RAW;
         default:
-            EV_LOG_ERR(ev_log_t_COM, 0,0, "Unknown socket type %d", std_type);
+            EV_LOGGING(COM, ERR, "SOCKET-TYPE-MAP", "Unknown socket type %d", std_type);
             return -1;
     }
 }
@@ -230,7 +240,7 @@ extern "C" t_std_error std_sock_addr_from_ip_str (e_std_socket_domain_t domain,
         case e_std_sock_INET4:
             out_saddr->address.inet4addr.sin_family = AF_INET;
             if (inet_aton (ipstr, &out_saddr->address.inet4addr.sin_addr) == 0) {
-                EV_LOG_ERR (ev_log_t_COM, 0, 0, "Invalid IP address string");
+                EV_LOGGING (COM, ERR, "IP-ADDR", "Invalid IP address string");
                 return GENERIC_FAIL;
             }
             break;
@@ -252,7 +262,7 @@ extern "C" t_std_error std_socket_create (e_std_socket_domain_t std_domain,
     int s = socket (_sock_domain_map (std_domain), _sock_type_map (std_type),
                     protocol);
     if (s==-1) {
-        EV_LOG_ERR(ev_log_t_COM, 0,0, "Socket create failed %d", errno);
+        EV_LOGGING(COM, ERR, "SOCKET-CREATE", "Socket create failed %d", errno);
         return RET_ERRNO;
     }
     *fd = s;
@@ -261,6 +271,32 @@ extern "C" t_std_error std_socket_create (e_std_socket_domain_t std_domain,
     }
     return STD_ERR_OK;
 }
+
+
+extern "C" t_std_error std_netns_socket_create (e_std_socket_domain_t std_domain,
+                               e_std_sock_type_t std_type,
+                               int protocol,
+                               const std_socket_address_t* bind,
+                               const char *net_namespace,
+                               int* fd)
+{
+    t_std_error rc = GENERIC_FAIL;
+    int crt_ns_handle = -1;
+
+    rc = std_sys_set_netns(net_namespace, &crt_ns_handle);
+    if (rc != STD_ERR_OK) {
+        EV_LOGGING (COM,ERR,"sock", "Name space set error %s", (net_namespace != NULL) ? net_namespace : "n/a");
+        return rc;
+    }
+
+    rc = std_socket_create (std_domain, std_type, protocol, bind, fd);
+
+    (void)std_sys_reset_netns(&crt_ns_handle);
+
+    return rc;
+}
+
+
 
 extern "C" t_std_error std_socket_bind (int fd, const std_socket_address_t* bind_addr) {
     socklen_t sa_len;

@@ -55,11 +55,11 @@ extern "C" {
 /**
  * @brief   read from a file descriptor and give options to continue to read
  *          or finish after the first that can be ignored..  ignores eintr
- * @param   fd[in] the file descriptor to use
- * @param   data[in] the buffer to read into
- * @param   len[in] the length of data
- * @param   require_all[in] true if should wait for all data otherwise false
- * @param   err the error code if provided
+ * @param[in]   fd the file descriptor to use
+ * @param[in]   data the buffer to read into
+ * @param[in]   len the length of data
+ * @param[in]   require_all true if should wait for all data otherwise false
+ * @param[out]   err the error code if provided
  * @return  length read, end of file will be less then len regardless of require all.  On error returns -1 and can check the return code for the error reason
  *
  */
@@ -69,11 +69,11 @@ int std_read(int fd, void*data, int len, bool require_all, t_std_error *err);
 /**
  * @brief     write to a file descriptor and give options to continue to write
  *          or finish after the first error that can be ignored..  ignores eintr
- * @param   fd[in] the file descriptor to use
- * @param   data[in] the buffer to write
- * @param   len[in] the length of data
- * @param   require_all[in] true if should send all data otherwise false
- * @param   err the error code if provided
+ * @param[in]   fd the file descriptor to use
+ * @param[in]   data the buffer to write
+ * @param[in]   len the length of data
+ * @param[in]   require_all true if should send all data otherwise false
+ * @param[out]   err the error code if provided
  * @return  length written.  On error returns -1 and can check the return code for the error reason
 
  */
@@ -82,9 +82,9 @@ int std_write(int fd, void*data, int len, bool require_all, t_std_error *err);
 
 /**
  * @brief   copy data from a file descriptor fdin to to a destination file descriptor fdout
- * @param   fdout[in] fd to write to
- * @param   fdin[in] fd to read from
- * @param   err[out] either a pointer to the error code or NULL if ignored
+ * @param[in]   fdout fd to write to
+ * @param[in]   fdin fd to read from
+ * @param[out]   err either a pointer to the error code or NULL to ignore
  * @return  the amount written or -1 on an error - additional data in err if
  *          provided
  */
@@ -102,14 +102,14 @@ t_std_error std_file_clone_fds(int *fclones, int *fin, int len);
 
 /**
  * @brief   redirect the stdin descriptor to an new fd
- * @param   fd the fd to redirect
+ * @param[in]   fd the fd to redirect
  * @return  std error code
  */
 t_std_error std_redir_stdoutin(int fd);
 
 /**
  * @brief   close the object associated with the descriptor
- * @param   fd  desriptor of object to be closed
+ * @param[in]   fd  desriptor of object to be closed
  * @return  std error code
  */
 t_std_error std_close (int fd);
@@ -117,12 +117,12 @@ t_std_error std_close (int fd);
 /**
  * @brief   write a set of buffers and give options to continue to write
  *          or finish after the first error that can be ignored..  ignores eintr
- * @param   fd[in] the file descriptor to use
- * @param   data[in] the buffers to write
- * @param   data_lens[in] the length of data
- * @param     set_len the length of the data/data_lens arrays
- * @param   require_all[in] true if should send all data otherwise false
- * @param   err the error code if provided
+ * @param[in]   fd the file descriptor to use
+ * @param[in]   data the buffers to write
+ * @param[in]   data_lens the length of data
+ * @param[in]     set_len the length of the data/data_lens arrays
+ * @param[in]   require_all true if should send all data otherwise false
+ * @param[out]   err the error code if provided as non NULL pointer
  * @return  length written.  On error returns -1 and can check the return code for the error reason
  */
 
@@ -133,16 +133,31 @@ ssize_t std_write_set(int fd, void**data, size_t *data_lens,  size_t set_len, bo
 /**
  * @brief   read into a set of buffers and give options to continue to read
  *          or finish after the first error that can be ignored..  ignores eintr
- * @param   fd[in] the file descriptor to use
- * @param   data[in] the buffer to read into
- * @param   data_lens[in] the lengths of the corresponding data buffer
- * @param     set_len[in] the sizes of the list of data/data_lens
- * @param   require_all[in] true if should send all data otherwise false
- * @param   err the error code if provided
+ * @param[in]   fd the file descriptor to use
+ * @param[in]   data the buffer to read into
+ * @param[in]   data_lens the lengths of the corresponding data buffer
+ * @param[in]   set_len the size of the list of data/data_lens
+ * @param[in]   require_all true if should send all data otherwise false
+ * @param[out]   err the error code if provided
  * @return  length written.  On error returns -1 and can check the return code for the error reason
  */
 ssize_t std_read_set(int fd, void**data, size_t *data_lens,  size_t set_len, bool require_all,
         t_std_error *err);
+
+/**
+ * @brief   Open a networking specific file descriptor in a given network namespace.
+ *
+ * @Note. Use 'fdopen' to obtain a 'FILE*' pointer - if needed.
+ *
+ * @param[in]   net_namespace network namespace
+ * @param[in]   filename filename to open
+ * @param[in]   flags open flags same as for 'open' e.g. O_RDONLY
+ * @param[out]  fd returned file descriptor
+ *
+ * @return  STD_ERR_OK or an error code
+ */
+t_std_error std_netns_fd_open (const char *net_namespace, const char *filename, int flags,
+                               int* fd);
 
 #ifdef __cplusplus
 }

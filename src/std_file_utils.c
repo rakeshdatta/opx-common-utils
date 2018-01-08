@@ -18,15 +18,24 @@
  * filename: std_file_utils.c
  */
 
+
 #include "std_file_utils.h"
+#include "std_system.h"
+#include "event_log.h"
+
 
 #include <unistd.h>
 #include <sys/uio.h>
+#include <sys/types.h>
+#include <string.h>
+#include <errno.h>
+#include <fcntl.h>
 
 #define STD_MAX_EINTR (10)
 
-
+#define GENERIC_FAIL STD_ERR_MK(e_std_err_COM,e_std_err_code_PARAM,0)
 #define STD_ERRNO STD_ERR_FROM_ERRNO(e_std_err_COM, e_std_err_code_FAIL)
+
 
 
 typedef ssize_t (*fo)(int fd, void *data, size_t len);
@@ -219,3 +228,32 @@ ssize_t std_write_set(int fd, void**data, size_t *data_lens,  size_t set_len, bo
 ssize_t std_read_set(int fd, void**data, size_t *data_lens,  size_t set_len, bool require_all, t_std_error *err) {
     return _std_op_set(fd,data,data_lens,set_len,require_all,err,readv);
 }
+
+
+t_std_error std_netns_fd_open (const char *net_namespace, const char *filename, int flags,
+                               int* fd)
+{
+    t_std_error rc = GENERIC_FAIL;
+    int crt_ns_handle = STD_INVALID_FD;
+
+    rc = std_sys_set_netns(net_namespace, &crt_ns_handle);
+    if (rc != STD_ERR_OK) {
+        EV_LOG_ERR (ev_log_t_COM,ERR,"file", "Name space set error %s", (net_namespace != NULL) ? net_namespace : "n/a");
+        return rc;
+    }
+
+
+    *fd = open(filename, flags);
+    if (*fd < 0) {
+        rc = STD_ERRNO;
+        EV_LOGGING(ev_log_t_COM, ERR, "file", "Cannot open %s::%s errno=%s(%d)",
+                net_namespace, filename, strerror (errno), errno);
+        // continue, we must return to regular name space
+    } else {
+        rc = STD_ERR_OK;
+    }
+    (void)std_sys_reset_netns(&crt_ns_handle);
+
+    return rc;
+}
+
