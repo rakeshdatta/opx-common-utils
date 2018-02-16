@@ -35,22 +35,6 @@
 extern "C" {
 #endif
 
-t_std_error std_dir_init(const char * ent_name, std_dir_handle_t *handle) {
-    DIR *d = opendir(ent_name);
-    if (d==NULL) {
-        if (errno==ENOENT) return STD_ERR(COM,NEXIST,0);
-        return STD_ERR(COM,FAIL,errno);
-    }
-    *handle = d;
-    return STD_ERR_OK;
-}
-
-
-void std_dir_close(std_dir_handle_t handle) {
-    DIR *d = (DIR*)handle;
-    closedir(d);
-}
-
 
 t_std_error std_dir_iterate(const char * ent_name,bool (*cb)(const char *name,
         std_dir_file_TYPE_t type,void *context),void *context, bool recurse) {

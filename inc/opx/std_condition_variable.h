@@ -26,6 +26,10 @@
 #include "std_error_codes.h"
 #include "std_mutex_lock.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** \defgroup LocksCommon Locking and Condition variable utilities
 * \{
 */
@@ -93,7 +97,30 @@ static inline t_std_error std_condition_var_wait(std_condition_var_t *cond,
 }
 
 /**
+ * Initialize the condition variable to use a monotonic clock with a timedwait
+ * @param var is the condition variable to initialize
+ * @return STD_ERR_OK if the operation was successful or STD_ERR(COM,FAIL,0) if failed
+ */
+t_std_error std_condition_var_timed_init(std_condition_var_t *var);
+
+/**
+ * Timed wait for either the condition variable to become active
+ * or for the relative time to pass.
+ * Requires the mutex that must be locked prior to entering this function call.
+ * @param cond the condition variable to wait on.
+ * @param lock the mutex lock guarding the data that the mutex will be operating on
+ * @param time_in_millisec the relative time in millisec
+ * @return True if timer expired. False if the cond var became active or
+ *         if an interrupt was received
+ */
+bool std_condition_var_timed_wait (std_condition_var_t* cond, std_mutex_type_t* lock,
+                                   size_t time_in_millisec);
+
+/**
  * \}
  */
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* STD_CONDITION_VARIABLE_H_ */

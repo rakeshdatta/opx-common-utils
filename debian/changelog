@@ -1,3 +1,10 @@
+opx-common-utils (1.4.1) unstable; urgency=medium
+
+  * Update: Wrapper for Pthread condition var timed wait with Monotonic clock
+  * Update: Handling deprecation of readdir_r without effecting the Jessie build
+
+ -- Dell EMC <ops-dev@lists.openswitch.net> Tue, 13 Feb 2018 11:00:00 -0800
+
 opx-common-utils (1.4.0) unstable; urgency=medium
 
   * Update: new socket types
