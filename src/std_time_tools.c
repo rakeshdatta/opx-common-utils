@@ -70,3 +70,23 @@ bool std_time_is_expired(uint64_t before, uint64_t time_in_ms) {
     uint64_t now = std_get_uptime(NULL);
     return (now - before) >= time_in_ms;
 }
+
+#define MILLISEC_IN_A_SEC (1000)
+#define NANOSEC_IN_A_SEC (1000 * 1000 * 1000)
+
+void std_time_get_monotonic_clock (size_t interval_in_ms, struct timespec* clock_time)
+{
+    clock_gettime(CLOCK_MONOTONIC, clock_time);
+    if (interval_in_ms == 0) return;
+
+    /* Add the sub-second fraction of interval to the nano-secs in time spec */
+    clock_time->tv_nsec += MILLI_TO_NANO (interval_in_ms % MILLISEC_IN_A_SEC);
+    /* Did we go over a second */
+    uint_t overflow = NANOSEC_TO_SEC (clock_time->tv_nsec);
+    if (overflow > 0) {
+        clock_time->tv_nsec %= NANOSEC_IN_A_SEC;
+    }
+
+    clock_time->tv_sec += (MILLISEC_TO_SEC (interval_in_ms) + overflow);
+}
+

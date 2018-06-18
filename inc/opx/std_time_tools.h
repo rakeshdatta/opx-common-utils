@@ -35,6 +35,7 @@
 
 #include "std_error_codes.h"
 #include "std_type_defs.h"
+#include <time.h>
 
 
 
@@ -44,6 +45,21 @@ extern "C" {
 
 #define MILLI_TO_MICRO(x)  ((x) * 1000)
 #define MICRO_TO_MILLI(x)  ((x) / 1000)
+
+#define SEC_TO_MICROSEC(x)  ((x) * 1000000)
+#define MICROSEC_TO_SEC(x)  ((x) / 1000000)
+
+#define SEC_TO_MILLISEC(x)  ((x) * 1000)
+#define MILLISEC_TO_SEC(x)  ((x) / 1000)
+
+#define MILLI_TO_NANO(x) ((x) * (1000000))
+#define NANO_TO_MILLI(x) ((x) / (1000000))
+
+#define NANOSEC_TO_SEC(x) ((x)/(1000 * 1000 * 1000))
+
+// Useful macros to calculate elapsed time b/w two uptimes.
+#define ELAPSED_TIME_IN_MICRO(x, y)  ((x) - (y))
+#define ELAPSED_TIME_IN_MILLI(x, y)  (((x) - (y)) / 1000)
 
 /**
  * @brief   usleep for a period of time and ignore eintr
@@ -73,6 +89,13 @@ uint64_t std_get_uptime(t_std_error *err);
  */
 bool std_time_is_expired(uint64_t before, uint64_t time_in_ms);
 
+/**
+ * Return Monotonic clock time when a given interval will expire.
+ *
+ * @param interval_in_ms  the interval in milliseconds, pass 0 to get current clock time
+ * @param[out] clock_time calculated clock time when interval passes
+ */
+void std_time_get_monotonic_clock (size_t interval_in_ms, struct timespec* clock_time);
 
 #ifdef __cplusplus
 }

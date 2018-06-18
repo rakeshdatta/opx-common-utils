@@ -20,7 +20,7 @@
 
 TEST(std_user_perm, function){
     //just create a file...
-    ASSERT_EQ(system("touch > /tmp/logfile"),0);
+    ASSERT_EQ(system("touch /tmp/logfile"),0);
 
 
     ASSERT_TRUE(std_user_chown("/tmp/logfile","admin","admin")==STD_ERR_OK);

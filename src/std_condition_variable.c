@@ -19,8 +19,8 @@
  **/
 
 #include "std_condition_variable.h"
+#include "std_time_tools.h"
 #include <pthread.h>
-#include <time.h>
 
 t_std_error std_condition_var_timed_init (std_condition_var_t* cond)
 {
@@ -29,30 +29,34 @@ t_std_error std_condition_var_timed_init (std_condition_var_t* cond)
     pthread_condattr_init(&attr);
     int err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
     if (err != 0) {
-        return STD_ERR (COM, FAIL, 0);
+        return STD_ERR (COM, FAIL, err);
     }
 
     // Now we can initialize the pthreads objects with that condattr
-    pthread_cond_init(cond, &attr);
+    err = pthread_cond_init(cond, &attr);
+    if (err != 0) {
+        return STD_ERR (COM, FAIL, err);
+    }
     return STD_ERR_OK;
 }
 
-bool std_condition_var_timed_wait (std_condition_var_t* cond, std_mutex_type_t* mutex, size_t time_in_millisec)
+t_std_error std_condition_var_timed_wait_until (std_condition_var_t* cond, std_mutex_type_t* mutex,
+                                                const struct timespec* abs_time, bool* timedout)
 {
-    size_t time_sec = (time_in_millisec / 1000);
-    size_t time_nanosec = ((time_in_millisec % 1000) * 1000000);
-
-    struct timespec timeout;
-    struct timespec now;
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    timeout.tv_sec = now.tv_sec + time_sec;
-    timeout.tv_nsec = now.tv_nsec + time_nanosec;
-
-    int rc = pthread_cond_timedwait(cond, mutex, &timeout);
-    if (rc == ETIMEDOUT)
-        return true;
-
-    return false;
+    *timedout = false;
+    int rc = pthread_cond_timedwait(cond, mutex, abs_time);
+    if (rc == ETIMEDOUT) {
+        *timedout = true;
+        return STD_ERR_OK;
+    }
+    return (rc == 0) ? STD_ERR_OK:STD_ERR (COM, FAIL, rc);
 }
 
+t_std_error std_condition_var_timed_wait (std_condition_var_t* cond, std_mutex_type_t* mutex, size_t interval_in_ms,
+                                          bool* timedout)
+{
+    struct timespec abs_time;
+    std_time_get_monotonic_clock (interval_in_ms, &abs_time);
+    return std_condition_var_timed_wait_until (cond, mutex, &abs_time, timedout);
+}
 

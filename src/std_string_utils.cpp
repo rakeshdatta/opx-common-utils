@@ -139,8 +139,8 @@ static size_t std_find_string_with_esc(std::string& str,  std::string::size_type
         size_t e = str.find(delim,ix);
         while(e != std::string::npos) {
             size_t esc_pos = str.find(esc, ix);
-            if((esc_pos !=std::string::npos) && (esc_pos + esc.size() == e)) {
-                ix = e+1;
+            if((esc_pos !=std::string::npos) && !(str.compare(e-esc.length(), esc.length(), esc))) {
+                ix = e+1; //delim length can be more than 1
                 e = str.find(delim, ix);
             } else {
                 return e;
@@ -152,14 +152,23 @@ static size_t std_find_string_with_esc(std::string& str,  std::string::size_type
     return std::string::npos;
 }
 
-static bool std_string_replace(std::string& str, const std::string& from, const std::string& to) {
+static bool std_string_replace_with_esc(std::string& str, const std::string& from, const std::string& to, const std::string &delim) {
     size_t start_pos = 0;
     try {
-        while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-            str.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+            while((start_pos = str.find(from, start_pos)) != std::string::npos)
+            {
+                size_t p1 = str.find(delim, start_pos);
+                if((start_pos + from.length() == p1) && p1 != std::string::npos)
+                {
+                    str.replace(start_pos, from.length(), to);
+                }
+                else
+                {
+                    start_pos += from.length();
+                }
+            }
         }
-    } catch (...) {
+    catch (...) {
         return false;
     }
     return true;
@@ -183,7 +192,7 @@ bool std_parse_string_with_esc(std_parsed_string_t * handle,const char * string,
                 e = data.size();
             }
             std::string found = data.substr(ix,e-ix);
-            std_string_replace(found, esc_string, empty_string);
+            std_string_replace_with_esc(found, esc_string, empty_string, delim);
             const char * ptr = found.c_str();
             vect.get()->push_back(ptr);
             ix = e + delim_len;

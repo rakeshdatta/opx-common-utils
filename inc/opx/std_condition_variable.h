@@ -25,6 +25,7 @@
 
 #include "std_error_codes.h"
 #include "std_mutex_lock.h"
+#include "std_time_tools.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -99,28 +100,170 @@ static inline t_std_error std_condition_var_wait(std_condition_var_t *cond,
 /**
  * Initialize the condition variable to use a monotonic clock with a timedwait
  * @param var is the condition variable to initialize
- * @return STD_ERR_OK if the operation was successful or STD_ERR(COM,FAIL,0) if failed
+ * @return STD_ERR_OK if the operation was successful or STD_ERR(COM,FAIL,err) if failed
  */
 t_std_error std_condition_var_timed_init(std_condition_var_t *var);
 
 /**
- * Timed wait for either the condition variable to become active
- * or for the relative time to pass.
- * Requires the mutex that must be locked prior to entering this function call.
+ * Wait for either a condition to be signaled or for the relative time to pass.
+ * Requires a mutex that must be locked prior to entering this function call.
+ * Can unblock spuriously without timeout or condition being signaled.
  * @param cond the condition variable to wait on.
- * @param lock the mutex lock guarding the data that the mutex will be operating on
- * @param time_in_millisec the relative time in millisec
- * @return True if timer expired. False if the cond var became active or
- *         if an interrupt was received
+ * @param lock the mutex lock guarding the data that the condition will be operating on
+ * @param interval_in_ms the relative time in millisec
+ * @param[out] timedout True if unblocked due to interval expires before condition is signaled.
+ *                      False otherwise
+ * @return STD_ERR_OK if unblocked by timeout, condition signal, other interrupt
+ *         STD_ERR(COM,FAIL,err) if failed
  */
-bool std_condition_var_timed_wait (std_condition_var_t* cond, std_mutex_type_t* lock,
-                                   size_t time_in_millisec);
+t_std_error std_condition_var_timed_wait (std_condition_var_t* cond, std_mutex_type_t* lock,
+                                          size_t interval_in_ms, bool* timedout);
 
+/**
+ * Wait for either a condition to be signaled or for system clock to reach the specified absolute time.
+ * Requires a mutex that must be locked prior to entering this function call.
+ * Can unblock spuriously without timeout or condition being signaled.
+ * @param cond the condition variable to wait on.
+ * @param lock the mutex lock guarding the data that the condition will be operating on
+ * @param abs_time the absolute clock time to wait for
+ * @param[out] timedout True if absolute time is reached.
+ *                      False if the cond var became active or if an interrupt was
+ *                      received before absolute time is reached
+ * @return STD_ERR_OK if unblocked by timeout, condition signal, other interrupt
+ *         STD_ERR(COM,FAIL,err) if failed
+ */
+t_std_error std_condition_var_timed_wait_until (std_condition_var_t* cond, std_mutex_type_t* lock,
+                                                const struct timespec* abs_time, bool* timedout);
 /**
  * \}
  */
 
 #ifdef __cplusplus
 }
+
+#include <system_error>
+
+class std_condition_var {
+    std_condition_var_t m_cv;
+
+    public:
+    std_condition_var () {
+        auto rc = std_condition_var_timed_init (&m_cv);
+        if (STD_ERR_OK != rc) {
+            int ec = STD_ERR_EXT_PRIV(rc);
+            throw std::system_error {std::error_code(ec, std::system_category()),
+                                     "Condition Variable init failed"};
+        }
+    }
+
+    /**
+     * Wait for Condition to be signaled and Predicate to be True OR for the interval to expire.
+     * Requires a mutex that must be locked prior to entering this function call.
+     *
+     * @param pred callable object that should return true in addition to signaling condition to unblock
+     * @param mutex the mutex lock guarding the data that the condition will be operating on
+     * @param interval_in_ms the relative time to wait for in millisec
+     * @return True if the Predicate is True
+     *         False if unblocked otherwise
+     * @throw std::system_error if invalid interval or mutex is passed in or if mutex is not owned by calling thread
+     */
+     template< class Predicate >
+        bool wait_for(std_mutex_type_t& mutex,
+                      size_t interval_in_ms, Predicate pred)
+    {
+        struct timespec abs_time;
+        std_time_get_monotonic_clock (interval_in_ms, &abs_time);
+
+        while (!pred()) {
+            bool timeout = false;
+            auto rc = std_condition_var_timed_wait_until (&m_cv, &mutex, &abs_time,
+                                                          &timeout);
+            if (STD_ERR_OK != rc) {
+                int ec = STD_ERR_EXT_PRIV(rc);
+                throw std::system_error {std::error_code(ec, std::system_category()),
+                                         "Condition Variable timed wait failed"};
+            }
+            if (timeout) {
+                // Timeout
+                return pred();
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Wait for the condition variable to be signaled and the Predicate to return True.
+     * Requires a mutex that must be locked prior to entering this function call.
+     *
+     * @param pred callable object that should return true in addition to signaling condition to unblock
+     * @param mutex the mutex lock guarding the data that the condition will be operating on
+     * @throw std::system_error if invalid mutex is passed in or if mutex is not owned by calling thread
+     */
+    template< class Predicate >
+        void wait (std_mutex_type_t& mutex, Predicate pred)
+    {
+        while (!pred()) {
+            auto rc = std_condition_var_wait (&m_cv, &mutex);
+            if (STD_ERR_OK != rc) {
+                int ec = STD_ERR_EXT_PRIV(rc);
+                throw std::system_error {std::error_code(ec, std::system_category()), "Condition Variable wait failed"};
+            }
+        }
+    }
+    /**
+     * Wait for the condition to be signaled.
+     * Requires a mutex that must be locked prior to entering this function call.
+     * Can unblock spuriously without condition being signaled.
+     * @param mutex lock guarding the data that the condition will be operating on
+     * @throw std::system_error if invalid mutex is passed in or if mutex is not owned by calling thread
+     */
+    void wait (std_mutex_type_t& mutex) {
+        auto rc = std_condition_var_wait (&m_cv, &mutex);
+        if (STD_ERR_OK != rc) {
+            int ec = STD_ERR_EXT_PRIV(rc);
+            throw std::system_error {std::error_code(ec, std::system_category()), "Condition Variable wait failed"};
+        }
+    }
+
+    /**
+     * Defer for specified interval, as long as Predicate evaluates to False.
+     * If condition is signaled before interval expires, it still defers unblocking
+     * for specified interval from the last condition signal.
+     * Requires a mutex that must be locked prior to entering this function call.
+     *
+     * @param pred callable object that should evaluate to True to override and unblock without delay
+     * @param mutex the mutex lock guarding the data that the condition will be operating on
+     * @param delay_in_ms interval in millisec to delay after condition is signaled
+     * @return True if unblocked before delay time because Pred() evaluates to True
+     *         False if the delay time expired
+     * @throw std::system_error if invalid delay or mutex is passed in or if mutex is not owned by calling thread
+     */
+     template< class Predicate >
+        bool defer_for (std_mutex_type_t& mutex, size_t delay_in_ms, Predicate pred)
+    {
+        // Keep defering for interval every time after waking up from condition wait
+        // Unblock if interval expires or if predicate evaluates to True
+        while (!pred()) {
+            bool timeout = false;
+            auto rc = std_condition_var_timed_wait (&m_cv, &mutex, delay_in_ms, &timeout);
+            if (STD_ERR_OK != rc) {
+                int ec = STD_ERR_EXT_PRIV(rc);
+                throw std::system_error {std::error_code(ec, std::system_category()),
+                                         "Condition Variable timed wait failed"};
+            }
+            if (timeout) {return false;}
+        }
+        return true;
+    }
+
+    void notify_all () noexcept {
+        std_condition_var_broadcast (&m_cv);
+    }
+    void notify () noexcept {
+        std_condition_var_signal (&m_cv);
+    }
+};
+
+
 #endif
 #endif /* STD_CONDITION_VARIABLE_H_ */

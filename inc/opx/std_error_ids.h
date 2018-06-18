@@ -97,6 +97,7 @@ enum e_std_error_subsystems {
     e_std_err_MCAST=59,
     e_std_err_APP_LFD=60,
     e_std_err_APP_VN=61,
+    e_std_err_BFD=62,
 };
 
 enum e_std_error_codes {
