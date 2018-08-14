@@ -78,6 +78,15 @@ extern "C" {
         (((((_p_ip_addr)->u.v6_addr [0]) & (0xff)) == (0xfe)) &&              \
          ((((_p_ip_addr)->u.v6_addr [1]) & (0xc0)) == (0x80)))
 
+#define STD_IP_IS_V4_ADDR_LINK_LOCAL(_p_ip_addr)                              \
+    (((htonl(((_p_ip_addr)->u.v4_addr)) & (0xff << 24)) == (0xa9 << 24)) &&   \
+     ((htonl(((_p_ip_addr)->u.v4_addr)) & (0xff << 16)) == (0xfe << 16)))
+
+#define STD_IP_IS_ADDR_V4_LINK_LOCAL(_p_ip_addr)                              \
+    (((_p_ip_addr)->af_index == HAL_INET4_FAMILY) ?                           \
+     (STD_IP_IS_V4_ADDR_LINK_LOCAL ((_p_ip_addr))) : 0)
+
+
 
 /*---------------------------------------------------------------*\
  *       Common Utility Function Prototypes
@@ -172,7 +181,7 @@ void std_ip_from_inet(hal_ip_addr_t *ip,struct in_addr *addr);
 void std_ip_from_inet6(hal_ip_addr_t *ip,struct in6_addr *addr);
 
 /**
- * Identifies a string as AF_INET or AF_INET6 
+ * Identifies a string as AF_INET or AF_INET6
  * @param ip_str  string to identify type
  * @param  ip_type inet type
  * @return true on success
