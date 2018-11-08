@@ -116,7 +116,7 @@ typedef struct _hal_ip_addr_t {
         struct in6_addr ipv6;
 /* Following defines are for backward compatibility */
 #define v4_addr ipv4.s_addr
-#define v6_addr ipv6.s6_addr 
+#define v6_addr ipv6.s6_addr
     } u;
 } hal_ip_addr_t;
 

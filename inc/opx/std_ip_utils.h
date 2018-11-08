@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Dell Inc.
+ * Copyright (c) 2018 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -31,6 +31,7 @@
 //! TODO move the types from db_common here and redefine them in the db-api to use these
 #include "ds_common_types.h"
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -78,14 +79,18 @@ extern "C" {
         (((((_p_ip_addr)->u.v6_addr [0]) & (0xff)) == (0xfe)) &&              \
          ((((_p_ip_addr)->u.v6_addr [1]) & (0xc0)) == (0x80)))
 
-#define STD_IP_IS_V4_ADDR_LINK_LOCAL(_p_ip_addr)                              \
-    (((htonl(((_p_ip_addr)->u.v4_addr)) & (0xff << 24)) == (0xa9 << 24)) &&   \
-     ((htonl(((_p_ip_addr)->u.v4_addr)) & (0xff << 16)) == (0xfe << 16)))
+/*!
+ * @brief Check if a IPv4 address is the link-local address
+ * @param IPv4 address
+ * @return true/false
+ */
 
-#define STD_IP_IS_ADDR_V4_LINK_LOCAL(_p_ip_addr)                              \
-    (((_p_ip_addr)->af_index == HAL_INET4_FAMILY) ?                           \
-     (STD_IP_IS_V4_ADDR_LINK_LOCAL ((_p_ip_addr))) : 0)
+static inline bool std_is_ip_v4_linklocal_addr(const hal_ip_addr_t *ip_addr) {
 
+    return ((ip_addr->af_index == HAL_INET4_FAMILY) &&
+            ((htonl(ip_addr->u.v4_addr) & ((unsigned long)0xff << 24)) == ((unsigned long)0xa9 << 24)) &&
+            ((htonl(ip_addr->u.v4_addr) & ((unsigned long)0xff << 16)) == ((unsigned long)0xfe << 16)));
+}
 
 
 /*---------------------------------------------------------------*\

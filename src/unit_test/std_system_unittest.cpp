@@ -65,7 +65,7 @@ TEST(std_system_unittest, execve_command_fail)
 
 TEST(std_system_unittest, set_netns)
 {
-    static const char* nsname = "os10test";
+    static const char* nsname = "opxtest";
 
     const char* envp[] = {
             NULL

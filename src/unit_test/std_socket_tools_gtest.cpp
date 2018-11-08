@@ -41,21 +41,21 @@ TEST(std_socket_tools_unittest, netns_socket_create_ok)
        "ip",
        "netns",
        "add",
-       "os10test",
+       "opxtest",
        NULL
    };
    ASSERT_EQ(STD_ERR_OK,std_sys_execve_command("/sbin/ip", args_add, envp));
 
    int fd = STD_INVALID_FD;
 
-   ASSERT_EQ(STD_ERR_OK,std_netns_socket_create(e_std_sock_NETLINK, e_std_sock_type_RAW, 0, NULL, "os10test", &fd) );
+   ASSERT_EQ(STD_ERR_OK,std_netns_socket_create(e_std_sock_NETLINK, e_std_sock_type_RAW, 0, NULL, "opxtest", &fd) );
    ASSERT_EQ(STD_ERR_OK,std_close(fd));
 
    const char* args_del[] = {
        "ip",
        "netns",
        "del",
-       "os10test",
+       "opxtest",
        NULL
    };
    ASSERT_EQ(STD_ERR_OK,std_sys_execve_command("/sbin/ip", args_del, envp));
@@ -65,7 +65,7 @@ TEST(std_socket_tools_unittest, netns_socket_create_fail)
 {
    int fd = STD_INVALID_FD;
 
-   ASSERT_NE(STD_ERR_OK,std_netns_socket_create(e_std_sock_NETLINK, e_std_sock_type_RAW, 0, NULL, "os10test", &fd) );
+   ASSERT_NE(STD_ERR_OK,std_netns_socket_create(e_std_sock_NETLINK, e_std_sock_type_RAW, 0, NULL, "opxtest", &fd) );
    ASSERT_NE(STD_ERR_OK,std_close(fd));
 }
 

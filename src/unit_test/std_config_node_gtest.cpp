@@ -37,7 +37,7 @@
 
 extern "C" {
 #include "std_config_node.h"
-}
+};
 
 /* If this is modified, ensure to update test_config_data also accordingly
  * Current test case is based on a static XML file and and corresponding arry of objects
@@ -46,18 +46,22 @@ extern "C" {
  */
 
 const char test_xml_data[]=" "
-"<sdi_kernel_driver instance=\"0\"> "
-    "<kernel_i2c instance=\"0\" bus_name=\"SMBus SCH adapter at 0400\" > "
-        "<!-- Some comment --> "
-        "<tmp75 instance=\"0\" addr=\"0x4c\" low_threshold=\"10\" high_threshold=\"100\" /> "
-        "<tmp75 instance=\"1\" addr=\"0x4d\" low_threshold=\"10\" high_threshold=\"100\" /> "
-        "<tmp75 instance=\"2\" addr=\"0x4e\" low_threshold=\"10\" high_threshold=\"100\" /> "
-    "</kernel_i2c> "
-    "<kernel_i2c instance=\"1\" bus_name=\"SMBus iSMT adapter at ff782000\" > "
-    "</kernel_i2c> "
-"</sdi_kernel_driver> "
+    "<sdi_kernel_driver instance=\"0\" xmlns:xi=\"http://www.w3.org/2001/XInclude\"> "
+         "<kernel_i2c instance=\"0\" bus_name=\"SMBus SCH adapter at 0400\" > "
+              "<!-- Some comment --> "
+              "<xi:include href=\"common_header.xml\" xpointer=\"xpointer(//tmp75)\"/>"
+         "</kernel_i2c> " 
+         "<kernel_i2c instance=\"1\" bus_name=\"SMBus iSMT adapter at ff782000\" > "
+         "</kernel_i2c> "
+    "</sdi_kernel_driver> "
 "";
-
+const char test_xml_xinclude_data[]=" "
+"<root>""\n" 
+"    "  "<tmp75 instance=\"0\" addr=\"0x4c\" low_threshold=\"10\" high_threshold=\"100\" /> ""\n"
+"    "  "<tmp75 instance=\"1\" addr=\"0x4d\" low_threshold=\"10\" high_threshold=\"100\" /> ""\n"
+"    "  "<tmp75 instance=\"2\" addr=\"0x4e\" low_threshold=\"10\" high_threshold=\"100\" /> ""\n"
+"</root>"
+" ";
 struct test_attr_element {
     const char *name;
     const char *value;
@@ -179,6 +183,7 @@ int main(int argc, char **argv) {
   FILE *fp;
   char *tmp_fname;
   int rc=-1;
+  int fd =0;
 
   strncpy(fname, "/tmp/std_config_node_text_XXXXXX", sizeof(fname));
   fname[sizeof(fname)-1] = 0;
@@ -197,6 +202,15 @@ int main(int argc, char **argv) {
       perror("Unable to create a temporary file: ");
       return -1;
   }
+
+  fd = open("/tmp/common_header.xml",O_RDWR | O_CREAT, S_IRWXO | S_IRWXG | S_IRWXU);
+  if(fd < 1)
+  {
+      perror("unable to open common_header file");
+      return -1;
+  }
+  write(fd, test_xml_xinclude_data,strlen(test_xml_xinclude_data));
+
   rc=generate_xmlfile(fp);
 
   fclose(fp);
@@ -206,7 +220,7 @@ int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   rc=RUN_ALL_TESTS();
 
-
+  remove("/tmp/common_header.xml");
   return rc;
 }
 

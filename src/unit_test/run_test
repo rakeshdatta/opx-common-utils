@@ -1,0 +1,14 @@
+#!/bin/bash -e
+./std_condition_var_unittest
+./std_thread_pool_unittest
+./bitmask_ut
+./std_ll_gtest
+./std_sock_sendto_unittest
+./std_tlv_unittest
+./cfg_gtest
+./std_config_node_unittest
+./std_socket_tools_unittest
+./std_directory_unittest
+./std_string_test
+./std_system_unittest
+./std_file_utils_unittest

@@ -28,7 +28,7 @@
 
 TEST(std_file_utils_unittest, netns_open)
 {
-    static const char* nsname = "os10test";
+    static const char* nsname = "opxtest";
     const char* envp[] = {
        NULL
     };

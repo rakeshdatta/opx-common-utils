@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([opx-common-utils], [1.5.0+opx1], [ops-dev@lists.openswitch.net])
+AC_INIT([opx-common-utils], [1.5.2], [ops-dev@lists.openswitch.net])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIRS([m4])

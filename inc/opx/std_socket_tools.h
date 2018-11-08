@@ -251,12 +251,12 @@ t_std_error std_socket_create (e_std_socket_domain_t std_domain,
  * @param[out] fd - socket descriptor returned
  * @return  STD_ERR_OK if successful or error
  * @verbatim
-   // to create a IPv4 UDP socket and bind it to 127.0.0.1 port 20000 in the namespace 'OS10NET'
+   // to create a IPv4 UDP socket and bind it to 127.0.0.1 port 20000 in the namespace 'OPXNET'
     std_socket_address_t bind;
     t_std_error rc = std_sock_addr_from_ip_str (e_std_sock_INET4, "127.0.0.1", 20000,
                                                 &bind);
     int fd;
-    rc = std_netns_socket_create (e_std_sock_INET4, e_std_sock_type_DGRAM, 0, &bind, "OS10NET", &fd);
+    rc = std_netns_socket_create (e_std_sock_INET4, e_std_sock_type_DGRAM, 0, &bind, "OPXNET", &fd);
  * @endverbatim
  */
 t_std_error std_netns_socket_create (e_std_socket_domain_t std_domain,

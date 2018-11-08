@@ -25,7 +25,7 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-
+#include <libxml/xinclude.h>
 #include <pthread.h>
 #include <memory>
 #include <vector>
@@ -91,9 +91,10 @@ std_config_hdl_t std_config_load(const char *filename) {
     pthread_once(&_once_control,one_time_init);
 
     STD_ASSERT(filename != NULL);
-    xmlDoc * _doc = xmlReadFile(filename, NULL, 0);
+    xmlDoc * _doc = xmlReadFile(filename, NULL, XML_PARSE_XINCLUDE);
 
     if (_doc!=nullptr) __get().ref(1);
+    xmlXIncludeProcess(_doc);
 
     return _doc;
 }
