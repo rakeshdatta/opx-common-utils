@@ -99,6 +99,7 @@ enum e_std_error_subsystems {
     e_std_err_APP_VN=61,
     e_std_err_BFD=62,
     e_std_err_INFRA_AFS=63,
+    e_std_err_FEFD=64,
 };
 
 enum e_std_error_codes {
