@@ -155,6 +155,23 @@ ssize_t std_read_set(int fd, void**data, size_t *data_lens,  size_t set_len, boo
 t_std_error std_netns_fd_open (const char *net_namespace, const char *filename, int flags,
                                int* fd);
 
+/**
+ * @brief Determine if the filename is safe for an operator to access on the
+ *        local filesystem. For security purposes, a file path is considered
+ *        unsafe if any of these conditions is true:
+ *        1) the filename contains a relative path (UP_DIR "..") token
+ *        2) the filename contains invalid chars
+ *
+ * @param[in] filename - the filename (including path) to inspect
+ *
+ * @return true if relative path is safe;
+ *         false otherwise
+ */
+bool
+std_file_uri_safe_local_path(
+        const char *filename);
+
+
 #ifdef __cplusplus
 }
 #endif

@@ -1490,7 +1490,7 @@ void std_radix_print(std_rt_table *rtt)
     } stack[MAXDEPTH], *sp;
     char prefix[MAXDEPTH];
     int i = MAXDEPTH;
-    char number[4];
+    char number[6];
 
     RDX_DEBUG_START(rtt);
     RDX_DEBUG_END;

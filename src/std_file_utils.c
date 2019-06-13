@@ -24,6 +24,7 @@
 #include "event_log.h"
 
 
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/uio.h>
 #include <sys/types.h>
@@ -32,6 +33,7 @@
 #include <fcntl.h>
 
 #define STD_MAX_EINTR (10)
+#define STD_FILE_UP_DIR       ".."
 
 #define GENERIC_FAIL STD_ERR_MK(e_std_err_COM,e_std_err_code_PARAM,0)
 #define STD_ERRNO STD_ERR_FROM_ERRNO(e_std_err_COM, e_std_err_code_FAIL)
@@ -257,3 +259,100 @@ t_std_error std_netns_fd_open (const char *net_namespace, const char *filename, 
     return rc;
 }
 
+/**
+ * @brief Determine if a token contains an invalid character
+ *
+ * @param[in] tok - the token to inspect
+ *
+ * @return true if token contains invalid char, false otherwise
+ */
+static inline bool
+std_file_token_contains_invalid_char(
+        const char *tok)
+{
+    /* set of invalid chars */
+    static const char *invalid_chars = "&|'<>";
+    const char *c = invalid_chars;
+
+    /* for each invalid char */
+    for (; 0 != *c; c++) {
+        if (NULL!=strchr(tok,*c)) {
+            /* found an invalid char */
+            return true;
+        }
+    }
+    /* no invalid char found */
+    return false;
+}
+
+/**
+ * @brief Determine if the filename is safe to access on the local filesystem.
+ *        For security purposes, a file path is considered unsafe if any of
+ *        these conditions is true:
+ *        1) the filename contains a relative path (UP_DIR "..") token
+ *        2) the filename contains invalid chars
+ *
+ * @param[in] filename - the filename (including path) to inspect
+ *
+ * @return true if relative path is safe;
+ *         false otherwise
+ */
+bool
+std_file_uri_safe_local_path(
+        const char *filename)
+{
+    int len;
+    char *filecopy=NULL;
+    char *tok=NULL;
+    char *saveptr=NULL;
+    size_t buf_sz = 0;
+    bool safe = true;
+
+    if (NULL==filename) {
+        /* invalid filename */
+        EV_LOGGING(COM, ERR, "file", "Error: Invalid input param");
+        return false;
+    }
+
+    /* since strtok_r modifies first arg, work on a copy */
+    buf_sz = strlen(filename)+1;
+    filecopy = malloc(buf_sz);
+    if (NULL==filecopy) {
+        /* don't log filename, perhaps caller requires it to be secret */
+        EV_LOGGING(COM, ERR, "file", "Error: malloc(%zu) failed", buf_sz);
+        /* memory allocation failed */
+        return false;
+    }
+
+    /* make the copy */
+    len = snprintf(filecopy, buf_sz, "%s", filename);
+    if (0>len || buf_sz<=len) {
+        /* don't log filename, perhaps caller requires it to be secret */
+        EV_LOGGING(COM, ERR, "file",
+                "Error: snprintf(%zu) failed, need %d", buf_sz, len+1);
+        /* could not copy full string */
+        free(filecopy);
+        return false;
+    }
+
+    /* get the first token */
+    tok = strtok_r(filecopy, "/", &saveptr);
+    /* while tokens are found */
+    while (tok) {
+        if (0==strcmp(tok, STD_FILE_UP_DIR)) {
+            /* relative path goes back (up-dir) */
+            safe = false;
+            break;
+        } else if (std_file_token_contains_invalid_char(tok)) {
+            /* contains at least one invalid char */
+            safe = false;
+            break;
+        }
+        /* get next token */
+        tok = strtok_r(NULL, "/", &saveptr);
+    }
+    /* free the allocated copy */
+    free(filecopy);
+
+    return (safe);
+}

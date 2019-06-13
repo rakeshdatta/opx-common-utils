@@ -50,7 +50,14 @@ static inline char *safestrncpy(
     const char *src, /**< [in] source string */
     size_t n         /**< [in] sizeof of destination string */)
 {
+    /* GCC-8 complains about string truncation, but this is intentional */
+    #pragma GCC diagnostic push
+    #if __GNUC__ >= 8 // Only GCC 8 and later
+    #pragma GCC diagnostic ignored "-Wstringop-truncation"
+    #endif
     char *ret = strncpy(dest, src, n);
+    #pragma GCC diagnostic pop
+
     dest[n-1] = 0;
     return ret;
 }

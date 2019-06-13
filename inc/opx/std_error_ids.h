@@ -96,6 +96,10 @@ enum e_std_error_subsystems {
     e_std_err_BFD=62,
     e_std_err_INFRA_AFS=63,
     e_std_err_FEFD=64,
+    e_std_err_APP_VTEP=65,
+    e_std_err_MCAST_L3=66,
+    e_std_err_NAS_PKT_IO=67,
+    e_std_err_APP_TELEMETRY=68,
 };
 
 enum e_std_error_codes {

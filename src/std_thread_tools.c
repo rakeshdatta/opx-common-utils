@@ -117,7 +117,59 @@ t_std_error std_thread_create(std_thread_create_param_t * params) {
     return rc;
 }
 
-void std_thread_join(std_thread_create_param_t *params) {
-    pthread_join(*((pthread_t*)(params->thread_id)),NULL);
+t_std_error
+std_thread_cancel(
+        std_thread_create_param_t *params)
+{
+    int rc = 0;
+
+    if ((NULL == params) || (NULL==params->thread_id)) {
+        /* invalid parameters */
+        EV_LOGGING(COM, ERR, "THR",
+                "Invalid input params %p",
+                params);
+        return STD_ERR_MK(e_std_err_COM, e_std_err_code_PARAM, 0);
+    }
+
+    rc = pthread_cancel(*((pthread_t*)(params->thread_id)));
+    if (0 != rc) {
+        /* cancel failed */
+        EV_LOGGING(COM, ERR, "THR",
+                "Error %d, failed to cancel thread:%s func:%p",
+                rc, params->name, params->thread_function);
+        return STD_ERR_MK(e_std_err_COM, e_std_err_code_FAIL, rc);
+    }
+
+    /* cancel successful */
+    return STD_ERR_OK;
+}
+
+t_std_error
+std_thread_join(
+        std_thread_create_param_t *params)
+{
+    int rc = 0;
+
+    if ((NULL == params) || (NULL==params->thread_id)) {
+        /* invalid parameters */
+        EV_LOGGING(COM, ERR, "THR",
+                "Invalid input params %p",
+                params);
+        return STD_ERR_MK(e_std_err_COM, e_std_err_code_PARAM, 0);
+    }
+
+    rc = pthread_join(*((pthread_t*)(params->thread_id)),NULL);
+    if (0 != rc) {
+        /* join failed */
+        EV_LOGGING(COM, ERR, "THR",
+                "Error %d, failed to join thread:%s func:%p",
+                rc, params->name, params->thread_function);
+        return STD_ERR_MK(e_std_err_COM, e_std_err_code_FAIL, rc);
+    }
+
+    /* join successful, destory the params */
+    std_thread_destroy_struct(params);
+
+    return STD_ERR_OK;
 }
 

@@ -58,8 +58,8 @@ static void _fill_unix_addr (const std_socket_address_t *in_saddr,
     struct sockaddr_un * unix_addr = (struct sockaddr_un *)out_saddr;
     memset(unix_addr, 0, sizeof(*unix_addr));
     unix_addr->sun_family = AF_UNIX;
-    strncpy(unix_addr->sun_path, in_saddr->address.str,
-            sizeof(unix_addr->sun_path)-1);
+    memcpy(unix_addr->sun_path, in_saddr->address.str,
+           sizeof(unix_addr->sun_path)-1);
     *len = SUN_LEN(unix_addr);
 }
 

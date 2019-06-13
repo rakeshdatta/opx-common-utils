@@ -97,6 +97,13 @@ bool std_time_is_expired(uint64_t before, uint64_t time_in_ms);
  */
 void std_time_get_monotonic_clock (size_t interval_in_ms, struct timespec* clock_time);
 
+/**
+ * @Brief - Return current time from epoch in nanoseconds
+ * @return time in nanoseconds as uint64
+ */
+uint64_t std_time_get_current_from_epoch_in_nanoseconds();
+
+
 #ifdef __cplusplus
 }
 #endif

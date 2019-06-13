@@ -84,16 +84,34 @@ t_std_error std_thread_create(std_thread_create_param_t * params);
 
 
 /**
+ * @brief Cancel a thread created with std_thread_create()
+ *
+ * @param[in] params structure that was passed to the successful create
+ *                   which started the thread.
+ *
+ * @return On success, returns STD_ERR_OK; on error, returns an error code.
+ */
+t_std_error
+std_thread_cancel(
+        std_thread_create_param_t *params);
+
+
+/**
  * @brief Join with a terminating thread
  * Wait for the thread to exit using data in the std_thread_create_param_t structure.
  * The join takes the create thread parameters as the thread ID is maintained
  * and there may be other fields in the std_thread_create_param_t structure that can be used to shutdown
  * the thread.
  *
- * @param params the structure that was passed to the successful create create which
- *         started the thread.
+ * @param[in,out] params structure that was passed to the successful create
+ *                       which started the thread. if join is successful,
+ *                       contents of the structure are destroyed
+ *
+ * @return On success, returns STD_ERR_OK; on error, returns an error code.
  */
-void std_thread_join(std_thread_create_param_t *params) ;
+t_std_error
+std_thread_join(
+        std_thread_create_param_t *params);
 
 
 /**

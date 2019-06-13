@@ -79,6 +79,9 @@ extern "C" {
         (((((_p_ip_addr)->u.v6_addr [0]) & (0xff)) == (0xfe)) &&              \
          ((((_p_ip_addr)->u.v6_addr [1]) & (0xc0)) == (0x80)))
 
+#define STD_IP_IS_V4_ADDR_LINK_LOCAL(_p_ip_addr)                              \
+    (((htonl(((_p_ip_addr)->u.v4_addr)) & (0xff << 24)) == (0xa9 << 24)) &&   \
+     ((htonl(((_p_ip_addr)->u.v4_addr)) & (0xff << 16)) == (0xfe << 16)))
 /*!
  * @brief Check if a IPv4 address is the link-local address
  * @param IPv4 address
